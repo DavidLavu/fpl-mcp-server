@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FPL MCP Server",
+    "version": "1.0.0",
+    "description": "Query Fantasy Premier League data and manager strategies."
+  },
+  "paths": {
+    "/tools/compare_top_manager_moves": {
+      "get": {
+        "summary": "Compare Top Manager Moves",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with captain and transfer-out summary"
+          }
+        }
+      }
+    }
+  }
+}

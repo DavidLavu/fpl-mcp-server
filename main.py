@@ -140,3 +140,10 @@ def compare_top_manager_moves(league_id: int, gw: int, top_n: int = Query(5, ge=
 @app.get("/tools/get_template_team")
 def get_template_team_view(league_id: int = 314, gw: int = 38, top_n: int = 5):
     return get_template_team(league_id, gw, top_n)
+
+from fastapi.responses import FileResponse
+
+@app.get("/openapi.json")
+def get_openapi_spec():
+    return FileResponse("openapi.json")
+  
