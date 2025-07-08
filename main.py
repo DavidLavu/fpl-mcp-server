@@ -56,14 +56,14 @@ def manager_info(team_id: int = Query(..., description="FPL team ID")):
 def manager_history(team_id: int = Query(..., description="FPL team ID")):
     return enrich_manager_history(get_manager_history(team_id))
 
-@app.get("/tools/get_manager_picks", summary="Manager Picks", description="Picks for a given manager and gameweek")
+@app.get("/tools/get_manager_picks", summary="Raw Picks (FPL Format)", description="Raw manager picks and team entry data directly from FPL API. Use /get_resolved_manager_picks for a human-friendly breakdown with points.")
 def manager_picks(
     team_id: int = Query(..., description="FPL team ID"),
     gw: int = Query(..., description="Gameweek number (1–38)")
 ):
     return enrich_manager_picks(get_manager_picks(team_id, gw))
 
-@app.get("/tools/get_resolved_manager_picks", summary="Resolved Picks", description="Enriched squad with roles (C, VC, points)")
+@app.get("/tools/get_resolved_manager_picks", summary="Player-by-Player GW Points", description="Returns a detailed breakdown of a manager's squad for a specific gameweek, including each player's name, team, position, price, captain/vice role, multiplier, and actual points scored. Use this to view who scored how many points in a gameweek.")
 def resolved_picks(
     team_id: int = Query(..., description="FPL team ID"),
     gw: int = Query(..., description="Gameweek number (1–38)")
