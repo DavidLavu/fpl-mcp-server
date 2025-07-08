@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 import requests
 from collections import Counter
+
 from tools.fpl_tools import (
     get_top_players,
     get_top_players_by_position,
@@ -23,8 +24,20 @@ from tools.fpl_tools import (
     get_template_team, get_bootstrap_data, get_manager_picks, get_manager_history
 )
 
+app = FastAPI(
+    title="FPL MCP Server",
+    version="1.0.0",
+    openapi_url="/openapi.json",
+    docs_url="/docs",
+    redoc_url=None,
+    servers=[
+        {
+            "url": "https://fpl-mcp-server.onrender.com",
+            "description": "Render Production"
+        }
+    ]
+)
 
-app = FastAPI()
 
 @app.get("/")
 def root():
