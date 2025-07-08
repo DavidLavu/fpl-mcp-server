@@ -9,5 +9,6 @@ openapi_schema = get_openapi(
     routes=app.routes,
 )
 
-with open("openapi.json", "w", encoding="utf-8") as f:
+with open("openapi_v2.json", "w", encoding="utf-8") as f:
     json.dump(openapi_schema, f, indent=2)
+

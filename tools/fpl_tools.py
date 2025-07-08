@@ -180,7 +180,31 @@ def enrich_manager_history(raw: dict):
 
 def enrich_manager_picks(raw: dict):
     entry = raw.get("entry_history", {})
-    picks = resolve_player_picks(raw.get("picks", []))
+    picks = raw.get("picks", [])
+    live_scores = get_live_scores(entry.get("event"))
+
+    live_data = {p["id"]: p for p in live_scores.get("elements", [])}
+    bootstrap = get_bootstrap_data()
+    players = {p["id"]: p for p in bootstrap["elements"]}
+    teams = {t["id"]: t["name"] for t in bootstrap["teams"]}
+    positions = {et["id"]: et["singular_name_short"] for et in bootstrap["element_types"]}
+
+    resolved_picks = []
+    for pick in picks:
+        element_id = pick["element"]
+        live = live_data.get(element_id, {}).get("stats", {})
+        player = players.get(element_id, {})
+
+        resolved_picks.append({
+            "name": f"{player.get('first_name')} {player.get('second_name')}",
+            "team": teams.get(player.get("team")),
+            "position": positions.get(player.get("element_type")),
+            "price": player.get("now_cost", 0) / 10,
+            "multiplier": pick["multiplier"],
+            "is_captain": pick["is_captain"],
+            "is_vice_captain": pick["is_vice_captain"],
+            "points": live.get("total_points", 0)
+        })
 
     return {
         "gameweek": entry.get("event"),
@@ -193,8 +217,9 @@ def enrich_manager_picks(raw: dict):
         "transfer_cost": entry.get("event_transfers_cost"),
         "bench_points": entry.get("points_on_bench"),
         "chip_used": raw.get("active_chip"),
-        "squad": picks
+        "squad": resolved_picks
     }
+
 
 def enrich_manager_info(raw: dict):
     data = get_bootstrap_data()
