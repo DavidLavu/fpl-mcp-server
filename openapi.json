@@ -1,30 +1,826 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "FPL MCP Server",
-    "version": "1.0.0",
-    "description": "Query Fantasy Premier League data and manager strategies."
+    "version": "1.1.0"
   },
   "paths": {
-    "/tools/compare_top_manager_moves": {
+    "/tools/get_top_players": {
       "get": {
-        "summary": "Compare Top Manager Moves",
+        "summary": "Top Players",
+        "description": "Get top N players ranked by total points",
+        "operationId": "top_players_tools_get_top_players_get",
         "parameters": [
           {
-            "name": "league_id",
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Number of players to return",
+              "default": 5,
+              "title": "Limit"
+            },
+            "description": "Number of players to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_top_players_by_position": {
+      "get": {
+        "summary": "Top By Position",
+        "description": "Get top players filtered by position (GK, DEF, MID, FWD)",
+        "operationId": "top_by_position_tools_get_top_players_by_position_get",
+        "parameters": [
+          {
+            "name": "position",
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string",
+              "description": "Player position: GK, DEF, MID, or FWD",
+              "title": "Position"
+            },
+            "description": "Player position: GK, DEF, MID, or FWD"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Number of players to return",
+              "default": 5,
+              "title": "Limit"
+            },
+            "description": "Number of players to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_player_by_name": {
+      "get": {
+        "summary": "Player Search",
+        "description": "Search for player by name (case-insensitive substring match)",
+        "operationId": "player_search_tools_get_player_by_name_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Full or partial player name",
+              "title": "Name"
+            },
+            "description": "Full or partial player name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_players_by_team": {
+      "get": {
+        "summary": "Players By Team",
+        "description": "Get all players from a given team name",
+        "operationId": "players_by_team_tools_get_players_by_team_get",
+        "parameters": [
+          {
+            "name": "team_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Full team name (e.g., Arsenal)",
+              "title": "Team Name"
+            },
+            "description": "Full team name (e.g., Arsenal)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_team_summary": {
+      "get": {
+        "summary": "Team Summary",
+        "description": "Static team metadata and strength from FPL bootstrap",
+        "operationId": "team_summary_tools_get_team_summary_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID (1\u201320)",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID (1\u201320)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_team_fixtures": {
+      "get": {
+        "summary": "Team Fixtures",
+        "description": "Upcoming and past fixtures for a given FPL team",
+        "operationId": "team_fixtures_tools_get_team_fixtures_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID (1\u201320)",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID (1\u201320)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_manager_info": {
+      "get": {
+        "summary": "Manager Info",
+        "description": "FPL manager info based on team ID",
+        "operationId": "manager_info_tools_get_manager_info_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_manager_history": {
+      "get": {
+        "summary": "Manager History",
+        "description": "FPL manager season history and gameweek summary",
+        "operationId": "manager_history_tools_get_manager_history_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_manager_picks": {
+      "get": {
+        "summary": "Manager Picks",
+        "description": "Picks for a given manager and gameweek",
+        "operationId": "manager_picks_tools_get_manager_picks_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
           },
           {
             "name": "gw",
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "description": "Gameweek number (1\u201338)",
+              "title": "Gw"
+            },
+            "description": "Gameweek number (1\u201338)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_resolved_manager_picks": {
+      "get": {
+        "summary": "Resolved Picks",
+        "description": "Enriched squad with roles (C, VC, points)",
+        "operationId": "resolved_picks_tools_get_resolved_manager_picks_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek number (1\u201338)",
+              "title": "Gw"
+            },
+            "description": "Gameweek number (1\u201338)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_live_scores": {
+      "get": {
+        "summary": "Live Scores",
+        "description": "Current FPL live stats for all players in a given gameweek",
+        "operationId": "live_scores_tools_get_live_scores_get",
+        "parameters": [
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek number (1\u201338)",
+              "title": "Gw"
+            },
+            "description": "Gameweek number (1\u201338)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_fdr": {
+      "get": {
+        "summary": "Fixture Difficulty",
+        "description": "Get next N opponent difficulty ratings for a team",
+        "operationId": "fdr_tools_get_fdr_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          },
+          {
+            "name": "next_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "How many future fixtures to check",
+              "default": 5,
+              "title": "Next N"
+            },
+            "description": "How many future fixtures to check"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_value_picks": {
+      "get": {
+        "summary": "Top Value Picks",
+        "description": "Return best points-per-million players",
+        "operationId": "value_picks_tools_get_value_picks_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max players to return",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Max players to return"
+          },
+          {
+            "name": "min_mins",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Minimum minutes played",
+              "default": 900,
+              "title": "Min Mins"
+            },
+            "description": "Minimum minutes played"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/ownership_trend": {
+      "get": {
+        "summary": "Ownership Trend",
+        "description": "Check player selection frequency across custom team IDs",
+        "operationId": "own_trend_tools_ownership_trend_get",
+        "parameters": [
+          {
+            "name": "team_ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated FPL team IDs (e.g. 1234,5678)",
+              "title": "Team Ids"
+            },
+            "description": "Comma-separated FPL team IDs (e.g. 1234,5678)"
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek number",
+              "title": "Gw"
+            },
+            "description": "Gameweek number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/chip_usage_summary": {
+      "get": {
+        "summary": "Chip Usage",
+        "description": "Aggregate chip usage (Triple Captain, Bench Boost, etc.)",
+        "operationId": "chips_tools_chip_usage_summary_get",
+        "parameters": [
+          {
+            "name": "team_ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated FPL team IDs",
+              "title": "Team Ids"
+            },
+            "description": "Comma-separated FPL team IDs"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/suggest_captain": {
+      "get": {
+        "summary": "Suggest Captain",
+        "description": "Suggest best captain pick based on live scores",
+        "operationId": "captain_tools_suggest_captain_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek number",
+              "title": "Gw"
+            },
+            "description": "Gameweek number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/suggest_transfers": {
+      "get": {
+        "summary": "Suggest Transfers",
+        "description": "Suggest 1\u20133 transfer moves based on recent form and value",
+        "operationId": "transfers_tools_suggest_transfers_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "FPL team ID",
+              "title": "Team Id"
+            },
+            "description": "FPL team ID"
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek number",
+              "title": "Gw"
+            },
+            "description": "Gameweek number"
+          },
+          {
+            "name": "budget",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "description": "Extra budget available in millions",
+              "default": 2.0,
+              "title": "Budget"
+            },
+            "description": "Extra budget available in millions"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_template_team": {
+      "get": {
+        "summary": "Template Team",
+        "description": "Most common squad across top N managers in a league",
+        "operationId": "template_team_tools_get_template_team_get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "League ID (default: Official FPL)",
+              "default": 314,
+              "title": "League Id"
+            },
+            "description": "League ID (default: Official FPL)"
+          },
+          {
+            "name": "gw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Gameweek",
+              "default": 38,
+              "title": "Gw"
+            },
+            "description": "Gameweek"
           },
           {
             "name": "top_n",
@@ -32,15 +828,169 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 5
-            }
+              "description": "How many top managers to check",
+              "default": 5,
+              "title": "Top N"
+            },
+            "description": "How many top managers to check"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response with captain and transfer-out summary"
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
+      }
+    },
+    "/tools/get_top_manager_ids": {
+      "get": {
+        "summary": "Top Managers in League",
+        "description": "List top N manager team IDs from a league",
+        "operationId": "league_top_ids_tools_get_top_manager_ids_get",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Mini-league ID",
+              "title": "League Id"
+            },
+            "description": "Mini-league ID"
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Number of top managers to return",
+              "default": 5,
+              "title": "Top N"
+            },
+            "description": "Number of top managers to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "Get OpenAPI Spec",
+        "description": "Expose schema for external tools like GPT to use",
+        "operationId": "openapi_spec_openapi_json_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Health check",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }

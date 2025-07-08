@@ -139,6 +139,88 @@ def get_manager_picks(team_id: int, gw: int):
 def get_manager_transfers(team_id: int, gw: int):
     return requests.get(f"{BASE_URL}/entry/{team_id}/event/{gw}/transfers/").json()
 
+def enrich_manager_history(raw: dict):
+    simplified_current = [
+        {
+            "gameweek": gw["event"],
+            "points": gw["points"],
+            "overall_rank": gw["overall_rank"],
+            "bench_points": gw["points_on_bench"],
+            "team_value": gw["value"] / 10,
+            "transfers": gw["event_transfers"],
+            "transfer_cost": gw["event_transfers_cost"],
+            "percentile": f"Top {gw['percentile_rank']}%"
+        }
+        for gw in raw.get("current", [])
+    ]
+
+    simplified_past = [
+        {
+            "season": season["season_name"],
+            "total_points": season["total_points"],
+            "final_rank": season["rank"]
+        }
+        for season in raw.get("past", [])
+    ]
+
+    simplified_chips = [
+        {
+            "chip": chip["name"],
+            "gameweek": chip["event"],
+            "date": datetime.fromisoformat(chip["time"].replace("Z", "+00:00")).strftime("%Y-%m-%d")
+        }
+        for chip in raw.get("chips", [])
+    ]
+
+    return {
+        "gameweek_history": simplified_current,
+        "season_history": simplified_past,
+        "chip_usage": simplified_chips
+    }
+
+def enrich_manager_picks(raw: dict):
+    entry = raw.get("entry_history", {})
+    picks = resolve_player_picks(raw.get("picks", []))
+
+    return {
+        "gameweek": entry.get("event"),
+        "points": entry.get("points"),
+        "total_points": entry.get("total_points"),
+        "overall_rank": entry.get("overall_rank"),
+        "team_value": entry.get("value", 0) / 10,
+        "bank": entry.get("bank", 0) / 10,
+        "transfers": entry.get("event_transfers"),
+        "transfer_cost": entry.get("event_transfers_cost"),
+        "bench_points": entry.get("points_on_bench"),
+        "chip_used": raw.get("active_chip"),
+        "squad": picks
+    }
+
+def enrich_manager_info(raw: dict):
+    data = get_bootstrap_data()
+    teams = {t["id"]: t["name"] for t in data["teams"]}
+
+    return {
+        "manager_name": f"{raw['player_first_name']} {raw['player_last_name']}",
+        "region": raw.get("player_region_name"),
+        "team_name": teams.get(raw.get("favourite_team")),
+        "overall_points": raw.get("summary_overall_points"),
+        "overall_rank": raw.get("summary_overall_rank"),
+        "gw_points": raw.get("summary_event_points"),
+        "gw_rank": raw.get("summary_event_rank"),
+        "years_played": raw.get("years_active"),
+        "leagues": [
+            {
+                "name": league["name"],
+                "rank": league.get("entry_rank"),
+                "total_players": league.get("rank_count"),
+                "percentile": league.get("entry_percentile_rank")
+            }
+            for league in raw.get("leagues", {}).get("classic", [])
+        ]
+    }
+
+
 
 # ───────────────────────────────────────────────────────
 # Live data & player form
